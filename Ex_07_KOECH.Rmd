@@ -1,6 +1,6 @@
 ---
 title: "Introduction to R"
-subtitle: "Homework 6"
+subtitle: "Homework 7"
 author: "Koech Andrew"
 date: "`r format(Sys.Date(), '%d %B, %Y')`"
 mainfont: Calibri Light
