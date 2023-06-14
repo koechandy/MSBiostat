@@ -1,0 +1,102 @@
+---
+title: "Introduction to R"
+subtitle: "Homework 2"
+author: "Koech Andrew"
+date: "`r format(Sys.Date(), '%d %B, %Y')`"
+mainfont: Calibri Light
+output: pdf_document
+geometry: margin=1in
+linkcolor: blue
+urlcolor: blue
+
+header-includes:
+  - \usepackage{amsfonts}
+  - \usepackage{amssymb}
+  - \usepackage{array}
+  - \usepackage{booktabs}
+  - \usepackage{mathtools}
+  - \usepackage{braket}
+---
+\newpage
+
+```{r,echo=FALSE,include=FALSE}
+options(digits = 4)
+```
+
+## Homework task 1
+
+```{r,warning=FALSE,include=TRUE,message=FALSE}
+# replicating both T and C 100 times simultaneously
+rep(c("T","C"),100)
+# replicating T 100 times then C 101 times
+rep(c("T","C"),c(100,101))
+#OR
+rep(c("T","C"),100:101)
+```
+
+
+## Homework task 2
+
+```{r,warning=FALSE,include=TRUE,message=FALSE}
+X<-matrix(c(31,21,12,22,41,30,19,64,52),3,byrow = TRUE)
+v<-matrix(c(12,2,-10),3,byrow=FALSE)
+
+# The determinant of matrix X
+det(X)# the determinant is 2066
+# Finding the inverse of matrix X
+solve(X)
+# Multiplying the transpose of X with inverse of X
+t(X)%*%solve(X)
+# Multiplying the matrix X with inverse of matrix X
+#The result is as expected since multiplying a matrix by its inverse should yield #an identity matrix for which in this case we have a 3*3 identity matrix
+X%*%solve(X)
+round(X%*%solve(X),digits = 6)
+# Multiplying the inverse of matrix X with column vector v
+solve(X)%*%v
+```
+
+## Homework task 3
+
+```{r,warning=FALSE,include=TRUE,message=FALSE}
+set.seed(453)
+mu<-170
+s<-10
+x<-rnorm(1000,mu,s)
+
+mean(x)#mean of x is 170.464
+sd(x)# standard deviation of x is 10.24573
+
+#Absolute deviations of mu and sigma
+abs(mean(x)-mu)
+
+abs(sd(x)-s)
+
+#Relative deviations of mu and sigma
+(mean(x)-mu)/mu
+
+(sd(x)-s)/s
+
+#Storing the first 500 values of x in the vector y
+y<-x[1:500]
+
+#Storing the last 500 values of x in z
+z<-x[-(1:500)]
+
+#Store the entries of x which do not satisfy the conditions 150 < x < 190 in w#
+
+w<-x[x<150|x>190]
+
+#d) Generate 1000 realizations from a normal distribution with parameters $\mu = 180$ and $\sigma= 10$ and store these in the vector x1.
+x1<-rnorm(1000,180,10)
+
+#Summarize the data x and x1 into 2 columns of a matrix M using cbind().
+M<-cbind(x,x1)
+
+#Let each row of the matrix M define the heights (in cm) of a couple. Determine for #how many couples both partners are larger than 190 cm.
+which((M[,2]>190&M[,1]>190)==TRUE)
+length(which((M[,2]>190&M[,1]>190)==TRUE))
+
+#In how many couples is at least one partner smaller than 150 cm?
+which((M[,2]<150|M[,1]<150)==TRUE)
+length(which((M[,2]<150|M[,1]<150)==TRUE))
+```

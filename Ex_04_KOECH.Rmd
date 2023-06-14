@@ -1,0 +1,115 @@
+---
+title: "Introduction to R"
+subtitle: "Homework 4"
+author: "Koech Andrew"
+date: "`r format(Sys.Date(), '%d %B, %Y')`"
+mainfont: Calibri Light
+output: pdf_document
+geometry: margin=1in
+
+# header-includes:
+#   - \usepackage{amsfonts}
+#   - \usepackage{amssymb}
+#   - \usepackage{array}
+#   - \usepackage{booktabs}
+#   - \usepackage{mathtools}
+#   - \usepackage{braket}
+---
+\newpage
+
+## Homework task 1
+
+Load the iris dataset from the datasets (probably already available and loaded) package and read the information about it. Calculate the mean values of the 4 metric-scaled features grouped by the qualitative characteristic Species. Also, find the overall means of all numeric columns. For both questions use a suitable function from the apply-family.
+
+```{r}
+data("iris")
+str(iris)
+
+# Calculate mean values of metric-scaled features by Species
+aggregate( . ~iris[,5],iris[, 1:4], FUN = mean)
+
+# Calculate overall means of all numeric columns
+overall_mean_values<-apply(iris[,c(1:4)],2,mean);overall_mean_values
+```
+
+## Homework task 2
+
+```{r}
+# a. Load the data set into R and sort the data set by age in increasing order
+heartatk4R<-read.delim("heartatk4R.txt")
+str(heartatk4R)
+heartatk4R_sorted<-heartatk4R[order(heartatk4R$AGE),]
+head(heartatk4R_sorted,15)
+# b. Calculate the mean of the age of patients grouped by SEX, DIAGNOSIS, DRG, and DIED
+tapply(heartatk4R[,8],heartatk4R[,3],mean,na.rm=TRUE)#mean of the age of patients grouped by SEX
+tapply(heartatk4R[,8],heartatk4R[,2],mean,na.rm=TRUE)#mean of the age of patients grouped by DIAGNOSIS
+tapply(heartatk4R[,8],heartatk4R[,4],mean,na.rm=TRUE)#mean of the age of patients grouped by DRG
+tapply(heartatk4R[,8],heartatk4R[,5],mean,na.rm=TRUE)#mean of the age of patients grouped by DIED
+
+
+tapply(heartatk4R[,8],heartatk4R[,c(3,2,4,5)],mean,na.rm=TRUE)
+# c. Calculate the mean of the hospitalization cost grouped by SEX, DIAGNOSIS, DRG, and DIED.
+tapply(heartatk4R[,6],heartatk4R[,c(3,2,4,5)],mean,na.rm=TRUE)
+# d. Calculate the mean of the length of stay grouped by SEX, DIAGNOSIS, DRG, and DIED.
+tapply(heartatk4R[,7],heartatk4R[,c(3,2,4,5)],mean,na.rm=TRUE)
+```
+
+e. Write a function meansd which takes a vector x and returns a two-dimensional vector where the first component contains the mean of x and the second component contains the standard deviation of x. Repeat task b. using tapply in combination with meansd to calculate mean and standard deviation of AGE grouped by SEX. Now do the same using aggregate(y~x, data = heartatk4R, FUN = meansd) (you have to choose y and x suitably of course) and comment on the way the results are returned (which data structure)?
+
+```{r}
+meansd <- function(x) {
+  y <- c(mean(x), sd(x))
+  names(y)<-c("MEAN","SD")
+  return(y)
+}
+
+tapply(heartatk4R[,8],heartatk4R[,3],meansd)
+aggregate(heartatk4R$AGE ~ heartatk4R$SEX, data = heartatk4R,FUN=meansd)
+
+#The tapply function returns a list whereas the aggregate function returns a data frame.
+```
+
+
+## Homework task 3
+
+Load the record _birthwt_ from the R package MASS and read the help function for this record (?birthwt).
+
+a. Compare the mean values from the birth weight of newborns according to their mother's smoking behavior.
+
+```{r}
+library(MASS)
+data("birthwt")
+attach(birthwt)
+aggregate(bwt~smoke,data = birthwt,FUN = mean)
+```
+
+b. Compare the mean values from the birth weight of the newborns according to their mother's high blood pressure (ht).
+
+```{r}
+aggregate(bwt~ht,data = birthwt,FUN = mean)
+
+boxplot(birthwt$bwt~birthwt$smoke,ylab = "Birth weight (in grams)",xlab = "History of Smoking (0 - No ; 1 - Yes)")
+t.test(birthwt$bwt~birthwt$smoke)
+#We can reject the null hypothesis that the difference in means at 5% significance level is zero and conclude that infact there exists a statistically significant difference between the average birth weights of children born to women with history of smoking versus those with no history of smoking.
+boxplot(birthwt$bwt~birthwt$ht,ylab = "Birth weight (in grams)",xlab = "High Blood Pressure (0 - No ; 1 - Yes)")
+t.test(birthwt$bwt~birthwt$ht)
+#We fail to reject the null hypothesis that the difference in means at 5% significance level is zero and conclude that there exists no statistically significant difference between the average birth weights of children born to women with high blood pressure versus those with no high blood pressure.
+```
+
+## Extra task
+
+```{r}
+library(lattice)
+birthwt$smoke <- as.factor(birthwt$smoke)
+birthwt$ht <- as.factor(birthwt$ht)
+
+tapply(birthwt$bwt, list(birthwt$smoke, birthwt$ht), mean)#The average mass in grams of babies whose mothers didn't smoke during pregnancy or have a history of hypertension was the highest at 3090 and lowest for babies whose mothers smoked during pregnancy and hypertension at 2561.
+
+
+interaction.plot(birthwt$smoke, birthwt$ht, birthwt$bwt)
+#From the plot we can see that the average birth weights of children was highest for mothers who neither had a history of smoking nor a history of hypertension but reduced a little for mothers who had a history of smoking without history of hypertension. On the other hand the average birth weights was lowest for mothers who had both a history of hypertension and with no history of smoking but increased for no history of smoking with history of hypertension. Overall the average birth weights was lowest for mothers who had a history of hypertension.
+
+bwplot(birthwt$bwt~birthwt$ht | birthwt$smoke,ylab = "Birth Weight (in grams)",xlab = "High Blood Pressure (0=No, 1=Yes)")
+#From this plot we can see that children from hypertensive mothers with smoking history have a large variance compared to children whose mothers neither smoked of had high blood pressure which had on average a better or small variation in their birth weights.
+```
+

@@ -1,0 +1,109 @@
+---
+title: "Introduction to R"
+subtitle: "Homework 6"
+author: "Koech Andrew"
+date: "`r format(Sys.Date(), '%d %B, %Y')`"
+mainfont: Calibri Light
+output: pdf_document
+geometry: margin=1in
+
+---
+\newpage
+
+## Homework task 1
+
+Use the dataset weight.txt.
+a. Illustrate the distribution of birth weight using a histogram and boxplot.
+
+```{r}
+weight=read.table("weight.txt",header = TRUE)
+attach(weight)
+str(weight)
+hist(bwt,col = "blue",main = "Histogram of Birth Weight")
+boxplot(bwt,col = "red",main = "Boxplot of Birth Weight")
+```
+
+
+b. Illustrate the distribution of weight grouped by maternal smoking behavior using grouped boxplots.
+
+```{r}
+boxplot(bwt~smoke,col =c("blue","green","red"),main = "Boxplot of Birth Weight by maternal smoking behavior",xlab = "Smoking Status",ylab = "Birth Weight (in grams)")
+```
+
+
+## Homework task 2
+
+Install the R package DAAG. The dataset cuckoos in this package contains the length and
+breadiness of laid eggs from different cuckoos.
+
+a. Calculate the mean and standard deviation of the variables length and breadth
+for each bird species from the data set.
+
+```{r,warning=FALSE,message=FALSE}
+library(DAAG)
+data("cuckoos")
+str(cuckoos)
+attach(cuckoos)
+
+meansd <- function(x) {
+  y <- c(mean(x), sd(x))
+  names(y)<-c("MEAN","SD")
+  return(y)
+}
+
+aggregate(length~species,data = cuckoos,meansd)
+aggregate(breadth~species,data = cuckoos,meansd)
+```
+
+
+b. Using grouped boxplots, illustrate the distribution of length and breadth for the
+different bird species. Which bird species lays the smallest egg (in terms of the
+mean and overall)? Does this match your expectation with respect to the results
+from a.?
+
+```{r}
+boxplot(length~species,main = "Boxplot of lengths of laid eggs from different cuckoos",ylab = "length (in mm)",col=c("red", "blue", "green", "orange", "purple", "yellow"))
+boxplot(breadth~species,main = "Boxplot of breadths of laid eggs from different cuckoos",ylab = "breadth (in mm)",col=c("red", "blue", "green", "orange", "purple", "yellow"))
+
+#In terms of the mean of both the lengths and breadth then the wren species has the smallest egg of the 6 species. However overall the meadow.pipit has the smallest egg lengthwise whereas in terms of breadth then the wren is still the smallest. It seems awkward for the meadow.pipit species to have the smallest length of egg overall since it's standard deviation is not the largest of the 6 so i wouldn't expect a huge variation in terms of it's observations.
+```
+
+
+c. Additional task: We want to test the difference in the sizes of the birds' eggs for
+significance. This is to be done once using the variance analysis and once using
+the pairwise t-test. Interpret the results.
+
+```{r}
+model1<-lm(length ~ species,data = cuckoos)
+anova(model1)
+
+#Since the p-value from ANOVA is less than my significance level of 5% then it suggests that there is a significant difference in the sizes of birds' eggs among the different species.
+pairwise.t.test(length,species)
+#At 5% significance level we can also conclude here that their exists a statistically significant difference between the wren species vs each of the other 5 species; between hedge.sparrow vs meadow.pipit (p-value=0.03703); and meadow.pipit vs tree.pipit (p-value=0.03856)
+```
+
+
+## Homework task 3
+
+The scatterplot function included in the car package is an advanced scatterplot function. Using scatterplot(y ~ x | z , ...) you can create a scatterplot for the points (x, y) grouped by z. In addition, a smooth function is applied to the point clouds, which is determined by the so-called LOESS-method (locally weighted polynomial regression).
+
+
+a. Use the scatterplot function to create a scatterplot grouped by the variable Species for the features Sepal.Length, Sepal.Width from the iris dataset. Use the regLine=F option.
+
+```{r,warning=FALSE,message=FALSE}
+library(car)
+data("iris")
+attach(iris)
+scatterplot(Sepal.Length~Sepal.Width|Species,regLine=FALSE)
+```
+
+
+b. The function smooth.spline(x,y) (from the package stats) adds another smooth function, called a smooth spline to the point clouds (x, y). First create a scatterplot (this time not grouped) for Sepal.Length and Sepal.Width using the function scatterplot. Then estimate a smooth spline for the features Sepal.Length and Sepal.Width and store the result in a variable smspline. Then add the estimated curve (i.e. the smooth spline) to the image (Note: Apply lines() to the smooth spline).
+
+```{r,warning=FALSE,message=FALSE}
+library(stats)
+scatterplot(Sepal.Length~Sepal.Width)
+smspline<-smooth.spline(Sepal.Length~Sepal.Width)
+lines(smspline, lty = 2,lwd=2,col = "darkred")
+```
+

@@ -1,0 +1,112 @@
+---
+title: "Introduction to R"
+subtitle: "Homework 5"
+author: "Koech Andrew"
+date: "`r format(Sys.Date(), '%d %B, %Y')`"
+mainfont: Calibri Light
+output: pdf_document
+geometry: margin=1in
+
+# header-includes:
+#   - \usepackage{amsfonts}
+#   - \usepackage{amssymb}
+#   - \usepackage{array}
+#   - \usepackage{booktabs}
+#   - \usepackage{mathtools}
+#   - \usepackage{braket}
+---
+\newpage
+
+## Homework task 1
+
+The dataset Arthritis from the package vcd contains the study results on the effect of a treatment method on arthritis patients. The dataset contains the patient number (ID), treatment type (Treatment), sex (Sex), age (Age), and the effect of the treatment (Improved).
+
+a. Create 1-, 2-, and 3-dimensional contingency tables for the nominal-scaled features Treatment, Sex, and Improved.
+
+```{r,message=FALSE,warning=FALSE,include=TRUE}
+library(vcd)
+data("Arthritis")
+str(Arthritis)
+attach(Arthritis)
+table(Treatment);table(Sex);table(Improved)#1-dimensional contingency tables
+table(Treatment,Sex);table(Treatment,Improved);table(Sex,Improved)#2-dimensional contingency tables
+structable(Improved~Sex+Treatment);structable(Treatment~Sex+Improved)#3-dimensional contingency tables
+```
+
+b. Plot the distribution of the characteristic Improved by Treatment for men and for women separately using pie charts and save all graphs in a pdf file. Use the layout function to arrange your graphic elements in an appropriate order and size.
+
+```{r}
+pdf("A:/MSBiostat/E2_Introduction_R/Output/improv_trt.pdf")
+layout(matrix(c(1:4),2,byrow = TRUE))#changed from par(mfrow=c(2,2))
+men=Arthritis[Arthritis[,3]=="Male",]
+women=Arthritis[Arthritis[,3]=="Female",]
+
+placebo_men=men[men[,2]=="Placebo",];treated_men=men[men[,2]=="Treated",];
+placebo_women=women[women[,2]=="Placebo",];treated_women=women[women[,2]=="Treated",];
+
+pie(table(placebo_men$Improved),col = c("khaki3", "blue","orange"), cex = 0.7,main = "Treatment (Placebo) - Male")
+pie(table(treated_men$Improved),col = c("khaki3", "blue","orange"), cex = 0.7,main = "Treatment (Treated) - Male")
+pie(table(placebo_women$Improved),col = c("khaki3", "blue","orange"), cex = 0.7,main = "Treatment (Placebo) - Female")
+pie(table(treated_women$Improved),col = c("khaki3", "blue","orange"), cex = 0.7,main = "Treatment (Treated) - Female")
+
+dev.off()
+```
+
+c. Now illustrate the distribution of the feature Improved by Treatment using grouped bar graphs.
+
+```{r}
+barplot(table(Improved,Treatment),beside=F,legend=T,col = c("blue","orange", "red"),xlab="Treatment",space = 1.2,ylim=c(0,80),main = "Distribution of Improvement Status by Treatment",font=3)
+```
+
+
+## Homework task 2
+
+The m111survey dataset in the tigerstats package contains data from students at Georgetown College.
+
+a. Which variables in this dataset are qualitative features?
+
+```{r,message=FALSE,warning=FALSE,include=TRUE}
+library(tigerstats)
+data("m111survey")
+attach(m111survey)
+str(m111survey)# The variables "weight_feel", "love_first", "extra_life", "seat","enough_Sleep" and "sex" are qualitative features.
+```
+
+b. Using the functions structable() and ftable(), create informative tables related to the qualitative features from this dataset to examine the qualitative features on their own and in combination with other qualitative features (that is, create not only table/graphics for each variable alone but also multi-dimensional tables and graphics displaying multiple variables).
+
+```{r}
+ftable(weight_feel);
+ftable(love_first);
+ftable(extra_life);
+ftable(seat);
+ftable(enough_Sleep);
+ftable(sex)
+ftable(weight_feel,sex)
+ftable(weight_feel,seat)
+ftable(weight_feel,love_first)
+ftable(extra_life,enough_Sleep)
+structable(weight_feel~sex+seat)
+structable(extra_life~sex+enough_Sleep)
+```
+
+c. Graphically represent the distribution of qualitative characteristics. You can use pie charts and bar charts (simple or grouped).
+
+```{r}
+pie(table(sex),col = c("blue","orange"),labels =c( "Female 56%","Male 44%"))
+barplot(table(weight_feel),beside=F,legend=T,col = c("blue","orange", "red"),space = 1.2,ylim=c(0,80),main = "Distribution of Weight Feeling")
+barplot(table(weight_feel,seat),beside=F,legend=T,col = c("blue","orange", "red"),xlab="Seat",space = 1.2,ylim=c(0,80),main = "Weight Feeling by Seating Position")
+```
+
+
+## Extra task
+
+Apply the mosaicplot(...) function to the Titanic dataset to create informative graphs. Interpret and annotate the graphs.
+
+```{r}
+data("Titanic")
+str(Titanic)
+
+mosaicplot(~ Age+Class, data = Titanic,col=c(2:5), main = "Distribution of people on the Titanic by Age and Class")#Here we see that almost a third of those on board the Titanic were crew members, majority of the passengers were in the 3rd class followed by those in the first class all of these being adults and majority of the children were on the 3rd class.
+mosaicplot(~Sex+Class, data = Titanic,col=c(3:6), main = "Distribution of people on the Titanic by Sex and Class")#From this plot we can note that majority of those on board the Titanic were male with majority being crew members. Most of the women were booked on the 3rd class of the Titanic. 
+mosaicplot(Titanic, main = "Survival on the Titanic",col=c(5,3))#The plot shows the survival status on the Titanic ship by Sex, Age and Class on deck.We can see from this that majority of the men died compared to women for the crew and those on the 3rd class as well. We can also note that almost half of the women on the 3rd class survived.
+```
