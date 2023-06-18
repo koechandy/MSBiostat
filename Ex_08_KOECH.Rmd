@@ -1,0 +1,129 @@
+---
+title: "Introduction to R"
+subtitle: "Homework 8"
+author: "Koech Andrew"
+date: "`r format(Sys.Date(), '%d %B, %Y')`"
+mainfont: Calibri Light
+output: pdf_document
+geometry: margin=1in
+
+header-includes:
+  - \usepackage{amsfonts}
+  - \usepackage{amssymb}
+  - \usepackage{mathtools}
+  - \usepackage{braket}
+
+---
+\newpage
+
+## Homework task 1
+
+In a fair game of roulette, the probability of red in any game is p0 = 18/37 (18 times red, 18 times black and one green). It is set to red. Which of the following scenarios indicate a rigged roulette wheel?
+
+i) You play 5 times in a row and lose 5 times.
+ii) You play 1000 times and win 450 times.
+
+Justify your answer by testing the null hypothesis $H_0 : p = 18/37$ against the alternative $H_1 : p < 18/37$ with a significance level of 0.05.
+
+```{r}
+#You play 5 times in a row and lose 5 times
+binom.test(0,5,p=18/37,alternative = "less")
+
+#You play 1000 times and win 450 times
+binom.test(450,1000,p=18/37,alternative = "less")
+
+#Both cases indicate a rigged roulette since the chances of winning here are zero and 0.45 for the first and second option respectively which is justified by the confidence intervals which we see that the probabilities of winning are less than the mentioned 0.4865 and both p-values are less than 0.05.
+```
+
+## Homework task 2
+
+A pharmaceutical company has developed a new drug that is believed to increase the chance of curing a particular disease from 70% (chance of success with standard medication) to about 75%. A study is being conducted with n = 100 patients.
+
+a. What is the chance to detect the presumed effect of about 5%? Use the significance level $\alpha$ = 0.05.
+
+b. What would be the minimum size of the presumed effect to reach a power of 0.95 (with n = 100)?
+
+c. What is the minimum sample size needed to detect a presumed effect of 1% with a power of 0.95?
+
+```{r}
+#a. chance to detect the presumed effect of about 5%
+k <- qbinom(0.95,100, 0.7)
+power_5eff <- 1-pbinom(k,100,0.75);power_5eff;
+
+#b. minimum size of the presumed effect to reach a power of 0.95 with n=100
+eff<- seq(0.70, 1, by = 0.000001)
+power <- 1 - pbinom(qbinom(0.95, 100, 0.70), 100, eff)
+min(eff[power >= 0.95])-0.70
+#minimum effect being 13.74%
+1-pbinom(qbinom(p=0.95,100,0.7), 100,0.7+0.1374)#Confirming power of 95%
+
+#c. minimum sample size needed to detect a presumed effect of 1% with a power of 0.95
+n <- 1000
+power <- 0.9
+while (power <= 0.95) {
+  n <- n + 1
+  power <- 1 - pbinom(qbinom(0.95, n, 0.70), n, 0.71)
+}
+n
+
+1 - pbinom(qbinom(0.95, 22515, 0.70), 22515, 0.71)#Confirmatory
+```
+
+## Homework task 3
+
+_Power calculation using Monte Carlo-Simulation_:
+
+We have formally determined the power of an upper binomial test
+$H_0: X\sim B(n,p_0)$ against $H_1: X\sim B(n,p_1)$
+
+for two experiments, $(n = 40, p_0 = 0.3, p_1 = 0.4, \alpha = 0.05) (power=0.31)$ and $(n = 200, p_0 = 0.3, p_1 = 0.4, \alpha = 0.05) (power=0.89)$ (see slides). However, it is not always possible to calculate the power of a test analytically. In such cases, the power can be determined by MC simulation. The following Monte Carlo procedure will be applied to the two experiments mentioned to approximate the power:
+
+i Step 1: Create a sample $Y \sim B(n, p_1)$.
+
+ii Step 2: Test (one-sided) whether $Y \sim b(n, p_0)$. To do this, compute the p-value of the test and use it to determine whether H0 can be rejected.
+
+iii Step 3: Repeat steps 1-2 N times (e.g. N=10000) and calculate how often (= M) H0 is rejected. The ratio M/N approximates the power of the test.
+
+```{r}
+pbinom(qbinom(0.95, 40, 0.3), 40, 0.4, lower.tail = FALSE)
+pbinom(qbinom(0.95, 200, 0.3), 200, 0.4, lower.tail = FALSE)
+
+
+MC_power <- function(n, p0, p1, alpha) {
+set.seed(528164)
+  N <- 10000
+  M <- 0 
+  for (i in 1:N) {
+    Y <- rbinom(1, n, p1)
+    p_value <- pbinom(Y, n, p0, lower.tail = FALSE)
+    if (p_value <= alpha) {
+      M <- M + 1
+    }
+  }
+
+  power <- M/N
+  return(power)
+}
+
+power1 <- MC_power(40,0.3,0.4,0.05)
+power2 <- MC_power(200,0.3,0.4,0.05)
+
+cat("Estimated Power for Experiment 1:", power1, "\n")
+cat("Estimated Power for Experiment 2:", power2, "\n")
+```
+
+## Extra Task:
+
+Write a new version of the function powerfct1 from the slides, which takes the arguments alpha, p0 and delta as in the original function. In addition, the argument n is now to be taken into account: Let n be a vector of sample sizes for which the function computes corresponding power values for the upper binomial test. Program the function without using a for loop, but calculate vector-wise instead.
+
+```{r}
+powerfct1 <- function(alpha = 0.05, p0 = NULL, delta = 0.1, n=100) {
+  k <- qbinom(p = 1 - alpha, size = n, prob = p0)
+  alpha.act <- 1 - pbinom(k, n, prob = p0)
+  power <- 1 - pbinom(q = k, size = n, prob = p0 + delta)
+  x <- data.frame(n, power, alpha.act)
+  return(x)
+}
+powerfct1(0.05,0.7,0.05,1000)
+```
+
