@@ -298,10 +298,40 @@ DATA FEV_Imputation;
 	LABEL FEV_Meanimp="Forced expiratory volume 1 sec - mean imputed";
 RUN;
 
-*** Save Dataset;
+/*Save Dataset*/
 DATA SP.FEV_meanimputed;
 	SET FEV_Imputation;
 RUN;
+
+/*Alternative (calculating mean in Proc sql)*/
+PROC SQL NOPRINT;
+	CREATE TABLE FEV_imputation2 AS
+	SELECT *, mean(FEV) AS fevmean
+	FROM SP.FEV_OBS 
+	GROUP BY treatment, time;
+QUIT;
+
+/*Define imputed variable and drop means*/
+DATA FEV_Imputation2;
+	SET FEV_Imputation2;
+	FEV_Meanimp=FEV;
+	IF FEV_Meanimp=. THEN FEV_Meanimp=fevmean;
+	DROP fevmean;
+	LABEL FEV_Meanimp="Forced expiratory volume 1 sec - mean imputed";
+RUN;
+
+/*Compare both data sets*/
+PROC SORT DATA=FEV_imputation;
+	BY Patid time;
+RUN;
+
+PROC SORT DATA=FEV_imputation2;
+	BY Patid time;
+RUN;
+
+PROC COMPARE BASE=FEV_imputation COMPARE=FEV_imputation2;
+RUN;
+
 
 /******************************************************************
 *******************************************************************
