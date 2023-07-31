@@ -340,3 +340,40 @@ RUN;
 *******************WITH RANDOM TERM********************************
 *******************************************************************
 *******************************************************************/
+
+DATA FEV_imputed;
+     SET SP.FEV_meanimputed;
+     FORMAT Treatment $trt.;
+RUN;
+
+/*Calculate mean FEV by treatment and time*/
+PROC MEANS DATA=FEV_imputed noprint;
+	VAR FEV;
+	CLASS Treatment time;
+	OUTPUT OUT=FEVMEANS MEAN=fevmean std=fevstd;
+RUN;
+
+/*Combine observed+means data using sql*/
+PROC SQL NOPRINT;
+	CREATE TABLE FEV_imputation AS
+	SELECT a.*, b.FEVMEAN,b.FEVSTD
+	FROM FEV_imputed AS a
+	LEFT JOIN FEVMEANS AS b
+	ON a.treatment=b.treatment AND a.time=b.time
+	WHERE b._TYPE_=3;
+QUIT;
+
+/*Defining the imputed values*/
+DATA FEV_Imputation;
+	SET FEV_Imputation;
+	CALL streaminit(1234);
+	FEV_Meanimprand=FEV;
+	IF FEV_Meanimprand=. THEN FEV_Meanimprand=RAND('NORMAL',fevmean,fevstd);
+	DROP FEVMEAN FEVSTD;
+	LABEL FEV_Meanimprand="Forced expiratory volume 1 sec - mean imputed with random element";
+RUN;
+
+/*Saving the Dataset with Randomly Imputed missing values*/
+DATA SP.FEV_meanimputed_rand;
+	SET FEV_Imputation;
+RUN;
