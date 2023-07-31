@@ -377,3 +377,42 @@ RUN;
 DATA SP.FEV_meanimputed_rand;
 	SET FEV_Imputation;
 RUN;
+
+/*************************************************************/
+/*Alternative approach: Calculating mean and std in Proc SQL;*/
+/*************************************************************/
+
+/*Calculate mean and std of FEV by treatment and time and store it in data set*/
+
+PROC SQL NOPRINT;
+	CREATE TABLE FEV_imputation2 AS
+	SELECT *, mean(FEV) AS fevmean, std(FEV) AS fevstd
+	FROM FEV_imputed GROUP BY treatment, time;
+QUIT;
+
+/*Defining imputed variable and drop means*/
+DATA FEV_Imputation2;
+	SET FEV_Imputation2;
+	CALL streaminit(1234);
+	FEV_Meanimprand=FEV;
+	IF FEV_Meanimprand=. THEN FEV_Meanimprand=RAND('NORMAL',fevmean,fevstd);
+	DROP FEVMEAN FEVSTD;
+	LABEL FEV_Meanimprand="Forced expiratory volume 1 sec - mean imputed with random element";
+RUN;
+
+/*Comparing both imputed data sets*/
+PROC SORT DATA=FEV_imputation;
+	BY Patid time;
+RUN;
+
+PROC SORT DATA=FEV_imputation2;
+	BY Patid time;
+RUN;
+
+PROC COMPARE BASE=FEV_imputation COMPARE=FEV_imputation2;
+RUN;
+
+/*An alternative imputation technique for subsequent missing data is the*/
+/*"last observation carried forward" (LOCF) method.*/
+/*The last observation per subject is used for all subsequent missing values*/
+
