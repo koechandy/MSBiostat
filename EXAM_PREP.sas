@@ -508,26 +508,33 @@ RUN;
 
 DATA FEV_Imputation4;
 	SET FEV_Imputation4;
+
 	* lastobsind is an indicator which is 0 if first non-missing observation has not yet been reached before and 1 if it has been reached before;
 	RETAIN firstobsind;
 	BY PatId;
+
 	* "reset" firstobsind for each subject;
-	IF first.PatId THEN DO;
-		firstobsind=0;
-	end;
+	IF first.PatId THEN
+		DO;
+			firstobsind=0;
+		end;
+
 	* If first non-missing observation has not yet been reached before:;
-	IF firstobsind=0 THEN DO;
-		* if observation is non-missing, set firstobsind to 1 (meaning that first non-missing observation hast been reached);
-		IF FEV_imputed NE . THEN firstobsind=1;
-		* if observation is missing, replace it with first non-missing value;
-		IF FEV_imputed=. THEN FEV_imputed=FEV_FOCB;
-	END;
+	IF firstobsind=0 THEN
+		DO;
+			* if observation is non-missing, set firstobsind to 1 (meaning that first non-missing observation hast been reached);
+			IF FEV_imputed NE . THEN
+				firstobsind=1;
+
+			* if observation is missing, replace it with first non-missing value;
+			IF FEV_imputed=. THEN
+				FEV_imputed=FEV_FOCB;
+		END;
 RUN;
 
 /*Saving the dataset with LOCF/FOCB COMBINED*/
 DATA SP.FEV_meanimputed_rand_LOCF;
 	SET FEV_imputation4(rename=(FEV_imputed=FEV_LOCFFOCB));
-	
 	LABEL FEV_LOCFFOCB="Forced expiratory volume 1 sec - LOCF/FOCB imputed";
 	DROP firstobsind lastobsind FEV_LOCF FEV_FOCB;
 RUN;
@@ -553,6 +560,7 @@ DATA FEV_Imputation2;
 	SET FEV_Imputation;
 	RETAIN timenonmis_prior fevnonmis_prior;
 	BY PatId;
+
 	IF FIRST.PATID THEN
 		DO;
 			timenonmis_prior=.;
@@ -608,7 +616,6 @@ DATA SP.FEV_meanimputed_rand_LOCF_linimp;
 	DROP fevnonmis_prior timenonmis_prior fevnonmis_post timenonmis_post;
 RUN;
 
-
 /******************************************************************
  *******************************************************************
  *******************************************************************
@@ -619,10 +626,9 @@ RUN;
 /*Do you find an association between FEV1 (dependent variable) and age and */
 /*sex(independent variables)?Is there an interaction between age and sex in */
 /*the prediction of FEV1?*/
-
 DATA FEV_Analysis;
-     SET SP.FEV_meanimputed_rand_LOCF_linimp;
-     FORMAT Treatment $trt.;
+	SET SP.FEV_meanimputed_rand_LOCF_linimp;
+	FORMAT Treatment $trt.;
 RUN;
 
 /*Presorting the data before analysis*/
@@ -632,33 +638,36 @@ RUN;
 
 /*Analysis with main effects for age and sex FOR*/
 PROC GLM DATA=FEV_Analysis;
-CLASS SEX;
-MODEL  FEV_LOCFFOCB_LINIMP= SEX AGE/SOLUTION clparm;
-     TITLE "(1) Model with main effects for Age and Sex";
-RUN;  
+	CLASS SEX;
+	MODEL  FEV_LOCFFOCB_LINIMP= SEX AGE/SOLUTION clparm;
+	TITLE "(1) Model with main effects for Age and Sex";
+RUN;
+
 QUIT;
 
 /*Analysis with main effects for Sex and age (reverse order!)*/
 PROC GLM DATA=FEV_Analysis;
-     CLASS Sex;
-     MODEL FEV_LOCFFOCB_LINIMP = sex age;
-     TITLE "(2) Model with main effects for Sex and Age";
-RUN;  
+	CLASS Sex;
+	MODEL FEV_LOCFFOCB_LINIMP = sex age;
+	TITLE "(2) Model with main effects for Sex and Age";
+RUN;
+
 QUIT;
 
 /*Analysis with interaction effect*/
 PROC GLM DATA=FEV_Analysis;
-     CLASS Sex;
-     MODEL FEV_LOCFFOCB_LINIMP = Sex Age Sex * Age / SOLUTION clparm;
-     TITLE "(3) Model with Sex, Age and the interaction term";
-RUN;  
-QUIT;
+	CLASS Sex;
+	MODEL FEV_LOCFFOCB_LINIMP = Sex Age Sex * Age / SOLUTION clparm;
+	TITLE "(3) Model with Sex, Age and the interaction term";
+RUN;
 
+QUIT;
 
 /*Alternative Syntax for same model Sex|age*/
 PROC GLM DATA=FEV_Analysis;
-     CLASS Sex;
-     MODEL FEV_LOCFFOCB_LINIMP = Sex|age / SOLUTION clparm;
-     TITLE "(4) Alternative SAS syntax: Model with Sex, Age and the interaction term";
-RUN;  
+	CLASS Sex;
+	MODEL FEV_LOCFFOCB_LINIMP = Sex|age / SOLUTION clparm;
+	TITLE "(4) Alternative SAS syntax: Model with Sex, Age and the interaction term";
+RUN;
+
 QUIT;
