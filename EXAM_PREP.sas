@@ -1,12 +1,9 @@
-DM "output ’clear’";
+DM "output ’clear’"; *** clear output;
+DM "clear log"; *** clear log;
+DM "odsresults; clear"; *** clear results;
 
-*** clear output;
-DM "clear log";
 
-*** clear log;
-DM "odsresults; clear";
 
-*** clear results;
 LIBNAME SP "A:\MSBiostat\SAS\00_Data\01_RawData_SAS";
 
 PROC FORMAT;
