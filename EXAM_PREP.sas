@@ -670,4 +670,90 @@ RUN;
 
 QUIT;
 
+/*Model 1: No interactions*/
+PROC GLM DATA=FEV_Analysis;
+     CLASS Sex treatment;
+     MODEL FEV_LOCFFOCB_LINIMP = Age sex time treatment / SOLUTION;
+     TITLE "(1) No interactions";
+RUN;  
+QUIT;
+
+/*Model 2: Time-treatment-interaction*/
+PROC GLM DATA=FEV_Analysis;
+     CLASS Sex treatment;
+     MODEL FEV_LOCFFOCB_LINIMP = Age sex time treatment time*treatment / SOLUTION;
+     TITLE "(2) Time-treatment-interaction";
+RUN;  
+QUIT;
+
+/*Model 3: Time-age-interaction*/
+PROC GLM DATA=FEV_Analysis;
+     CLASS Sex treatment;
+     MODEL FEV_LOCFFOCB_LINIMP = Age sex time treatment time*age / SOLUTION;
+     TITLE "(3) Time-age-interaction";
+RUN;  
+QUIT;
+
+/*Model 4: Time-age-interaction*/
+PROC GLM DATA=FEV_Analysis;
+     CLASS Sex treatment;
+     MODEL FEV_LOCFFOCB_LINIMP = Age sex time treatment time*sex / SOLUTION;
+     TITLE "(4) Time-age-interaction";
+RUN;  
+QUIT;
+
+/*Model 5: All interaction with time*/
+PROC GLM DATA=FEV_Analysis;
+     CLASS Sex treatment;
+     MODEL FEV_LOCFFOCB_LINIMP = Age sex time treatment time*sex time*age time*treatment / SOLUTION;
+     TITLE "(5) Time-age-interaction";
+RUN;  
+QUIT;
+
+/*Model 6: With age^2*/
+PROC GLM DATA=FEV_Analysis;
+     CLASS Sex treatment;
+     MODEL FEV_LOCFFOCB_LINIMP = Age sex time treatment age2/ SOLUTION;
+     TITLE "(6) with age^2";
+RUN;  
+QUIT;
+
+/*Fit model 6 also to unimputed data*/
+PROC GLM DATA=FEV_Analysis;
+     CLASS Sex treatment;
+     MODEL FEV = Age sex time treatment age2/ SOLUTION;
+     TITLE "(7) unimputed data";
+RUN;  
+QUIT;
+
+PROC GLM DATA=FEV_Analysis;
+     CLASS Sex treatment;
+     MODEL FEV_Meanimprand = Age sex time treatment age2/ SOLUTION;
+     TITLE "(8) unimputed data";
+RUN;  
+QUIT;
+
+/*NOTE: Observations are correlated. Proc GLM no valid method. Use random intercept model instead*/
+PROC MIXED DATA=FEV_Analysis;
+     CLASS Sex treatment;
+     MODEL FEV_LOCFFOCB_LINIMP = Age sex time treatment age2/ SOLUTION;
+     RANDOM  Int / SUBJECT=PatId;
+     REPEATED    / SUBJECT=PatId TYPE=AR(1);
+     TITLE1 "MIXED, LOCF+FOCB+linear interpolation";
+     TITLE2 "Fixed:   Sex Age Age^2 time treatment"   ;
+     TITLE3 "Random:  Intercept";
+     TITLE4 "Correlation within individual: AR(1)";
+RUN;
+
+/*Same model to unimputed data*/
+PROC MIXED DATA=FEV_Analysis;
+     CLASS Sex treatment;
+     MODEL FEV = Age sex time treatment age2/ SOLUTION;
+     RANDOM  Int / SUBJECT=PatId;
+     TITLE1 "MIXED, original data (with missing)";
+     TITLE2 "Fixed:   Sex Age Age^2 time treatment"   ;
+     TITLE3 "Random:  Intercept";
+     TITLE4 "Correlation within individual: AR(1)";
+RUN;
+
 
