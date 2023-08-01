@@ -626,6 +626,7 @@ RUN;
 DATA FEV_Analysis;
 	SET SP.FEV_meanimputed_rand_LOCF_linimp;
 	FORMAT Treatment $trt.;
+	age2=age*age;
 RUN;
 
 /*Presorting the data before analysis*/
@@ -668,3 +669,5 @@ PROC GLM DATA=FEV_Analysis;
 RUN;
 
 QUIT;
+
+
